@@ -15,6 +15,64 @@ using namespace std;
 namespace kko{
 	using namespace std;
 	class ObjectMapper{
+		string decStr(string s){		
+			string r="";
+			for(int i=0;i<s.length();){
+				if(s[i]=='\\'){
+					i++;
+					switch(s[i]){
+						case 'n':
+							r+='\n';
+							break;
+						case 'r':
+							r+='\r';
+							break;
+						case '\\':
+							r+='\\';
+							break;
+						case '"':
+							r+='"';
+							break;																					
+						case 't':
+							r+='\t';
+							break;
+						default:
+							r+='\\';
+							r+=s[i];							
+					}
+					i++;
+				}else{
+					r+=s[i];
+					i++;
+				}
+			}
+			return r;
+		}
+		string encStr(string s){
+			string r="";
+			for(int i=0;i<s.length();i++){
+				switch(s[i]){
+					case '"':
+						r+='\\'; r+=34;
+						break;
+					case 10:
+						r+='\\'; r+='n';
+						break;						
+					case 13:
+						r+='\\'; r+='r';
+						break;						
+					case 9:
+						r+='\\'; r+='t';
+						break;
+					case '\\':
+						r+='\\'; r+='\\';						
+						break;
+					default:
+						r+=s[i];												
+				}
+			}
+			return r;
+		}
 	public:
 		void writeValue(basic_iostream<char> &v, void*o,string dsc,vector<string>names){
 			v<<"{";
@@ -30,7 +88,7 @@ namespace kko{
 						break;
 					case 's':
 						string &s=*((string*)(o+ofs));
-						v << string(1,'"') << names[j] << '"' << ':' << '"' << s << '"';
+						v << string(1,'"') << names[j] << '"' << ':' << '"' << encStr(s) << '"';
 						ofs+=sizeof(string);
 						break;						
 				}
@@ -70,13 +128,13 @@ namespace kko{
 		string readQuoted(basic_iostream<char> &v){
 			char b;
 			string s;
-			v>>b;
+			b=v.get();
 			if(b=='"') while(true){
-				v>>b;
+				b=v.get();
 				if(b=='"') return s;
 				s+=b;
 			}else if(b==39) while(true){ //'
-				v>>b;
+				b=v.get();
 				if(b==39) return s;
 				s+=b;
 			}
@@ -106,7 +164,7 @@ namespace kko{
 						break;
 					case 's':
 						string s=readQuoted(v);		cout<<s<<"::";
-						*((string*)ofs)=s;
+						*((string*)ofs)=decStr(s);
 						ofs+=sizeof(string);
 						break;						
 				}
