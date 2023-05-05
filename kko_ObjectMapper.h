@@ -74,9 +74,9 @@ namespace kko{
 			return r;
 		}
 	public:
-		void writeValue(basic_iostream<char> &v, void*o,string dsc,vector<string>names){
+		void writeValue(basic_iostream<char> &v, void*o,string dsc,vector<string>names,bool hasVirt=false){
 			v<<"{";
-			int ofs=0;
+			int ofs=hasVirt ? sizeof(void*) : 0;
 			int i;
 			for(int j=0;j<dsc.length();j++){
 				if(j>0) v<<',';
@@ -144,9 +144,10 @@ namespace kko{
 			return v.peek();
 		}
 		template<typename T>		
-		T readValue(basic_iostream<char> &v,string dsc){
+		T readValue(basic_iostream<char> &v,string dsc,bool hasVirt=false){
 			T t;
 			void*ofs=&t;
+			if(hasVirt) ofs+=sizeof(void*);
 			//
 			int i;
 			skipTill(v,'{');
