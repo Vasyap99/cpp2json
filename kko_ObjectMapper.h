@@ -78,6 +78,7 @@ namespace kko{
 			v<<"{";
 			int ofs=hasVirt ? sizeof(void*) : 0;
 			int i;
+			bool b;
 			for(int j=0;j<dsc.length();j++){
 				if(j>0) v<<',';
 				switch(dsc[j]){
@@ -86,11 +87,16 @@ namespace kko{
 						v << string(1,'"') << names[j] << '"' << ':' << i;
 						ofs+=sizeof(int);						
 						break;
+					case 'b':
+						b=*((bool*)(o+ofs));
+						v << string(1,'"') << names[j] << '"' << ':' << ( b ? "true" :"false" );
+						ofs+=sizeof(bool);
+						break;	
 					case 's':
 						string &s=*((string*)(o+ofs));
 						v << string(1,'"') << names[j] << '"' << ':' << '"' << encStr(s) << '"';
 						ofs+=sizeof(string);
-						break;						
+						break;				
 				}
 			}
 			v<<"}";			
@@ -125,6 +131,17 @@ namespace kko{
 			}
 			return stoi(s);
 		}
+		int readWord(basic_iostream<char> &v){
+			string s;
+			char b;
+			while(true){
+				b=v.peek();
+				if( !(b>='a' && b<='z' || b>='A' && b<='Z' || b>='0' && b<='9' || b=='_') )
+					return stoi(s);					
+				s+=v.get();
+			}
+			return stoi(s);
+		}
 		string readQuoted(basic_iostream<char> &v){
 			char b;
 			string s;
@@ -150,6 +167,8 @@ namespace kko{
 			if(hasVirt) ofs+=sizeof(void*);
 			//
 			int i;
+			bool b;
+			string s;
 			skipTill(v,'{');
 			readChar(v);
 			for(int j=0;j<dsc.length();j++){
@@ -163,8 +182,13 @@ namespace kko{
 						*((int*)ofs)=i;
 						ofs+=sizeof(int);						
 						break;
+					case 'b':
+						s=readWord(v);		cout<<s<<":";
+						*((bool*)ofs) = s=="true" ? true : false;
+						ofs+=sizeof(bool);						
+						break;
 					case 's':
-						string s=readQuoted(v);		cout<<s<<"::";
+						s=readQuoted(v);		cout<<s<<"::";
 						*((string*)ofs)=decStr(s);
 						ofs+=sizeof(string);
 						break;						
